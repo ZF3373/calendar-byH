@@ -17,6 +17,7 @@ export const el = <K extends keyof HTMLElementTagNameMap>(
   for (const [k, v] of Object.entries(attrs)) {
     if (k === 'class') node.className = v
     else if (k === 'html') node.innerHTML = v
+    else if (k === 'text') node.textContent = v
     else node.setAttribute(k, v)
   }
   for (const c of children) node.append(c)
