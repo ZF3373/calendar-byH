@@ -43,11 +43,18 @@ async function main(): Promise<void> {
 /** 应用设置到 DOM（CSS 变量） */
 function applySettingsToDom(s: AppSettings): void {
   const root = document.documentElement
-  root.style.setProperty('--theme', s.themeColor || '#4f8cff')
+  const theme = s.themeColor || '#4f8cff'
+  root.style.setProperty('--theme', theme)
+  // 同步主题色 RGB 分量，供 rgba(var(--theme-rgb)) 半透明强调使用
+  const m = theme.match(/^#([0-9a-f]{6})$/i)
+  if (m) {
+    const n = parseInt(m[1], 16)
+    root.style.setProperty('--theme-rgb', `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`)
+  }
   root.style.setProperty('--font-size', (s.fontSize || 14) + 'px')
   root.style.setProperty('--line-height', String(s.lineHeight || 1.6))
   const app = $('#app')!
-  ;(app as HTMLElement).style.background = `rgba(20,24,34,${0.2 + (s.opacity || 0.6) * 0.4})`
+  ;(app as HTMLElement).style.background = '' // 固定深色毛玻璃，透明度统一由窗口 setOpacity 控制
   document.body.classList.toggle('click-through', !!s.clickThrough)
 }
 

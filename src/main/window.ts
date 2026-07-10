@@ -59,8 +59,9 @@ export class WindowManager {
     this.settings = s
     const win = this.win
     if (!win) return
-    // 透明度作为整体窗口 opacity（CSS 毛玻璃叠加）
-    win.setOpacity(1) // 透明背景由 CSS 控制，窗口本体不透明以保证文字清晰
+    // 透明度作为整体窗口 opacity（0.4~1.0 明显可见），CSS 负责毛玻璃叠色
+    const op = 0.4 + (s.opacity ?? 0.6) * 0.6
+    win.setOpacity(Math.max(0.4, Math.min(1, op)))
     win.webContents.send('settings:changed', s)
     this.setAlwaysBottom(s.alwaysBottom)
     this.setClickThrough(s.clickThrough)

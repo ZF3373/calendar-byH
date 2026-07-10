@@ -1,7 +1,8 @@
 :root {
   --theme: #4f8cff;
+  --theme-rgb: 79, 140, 255;
   --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-border: rgba(255, 255, 255, 0.16);
   --text: #f2f5fa;
   --text-dim: rgba(242, 245, 250, 0.6);
   --font-size: 14px;
@@ -31,7 +32,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(20, 24, 34, 0.35);
+  background: rgba(16, 19, 28, 0.55);
   backdrop-filter: blur(28px) saturate(140%);
   -webkit-backdrop-filter: blur(28px) saturate(140%);
   border: 1px solid var(--glass-border);
@@ -63,7 +64,7 @@ body.click-through #titlebar {
   cursor: grab;
   user-select: none;
   border-bottom: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.22);
 }
 #titlebar:active {
   cursor: grabbing;
@@ -107,7 +108,7 @@ body.click-through #titlebar {
   padding: 10px 8px;
   border-right: 1px solid var(--glass-border);
   overflow-y: auto;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.28);
 }
 .list-item {
   display: flex;
@@ -119,10 +120,10 @@ body.click-through #titlebar {
   margin-bottom: 4px;
 }
 .list-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
 }
 .list-item.active {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.22);
 }
 .list-dot {
   width: 10px;
@@ -173,7 +174,7 @@ body.click-through #titlebar {
   padding: 4px 12px;
   border: none;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
   color: var(--text);
   cursor: pointer;
 }
@@ -209,12 +210,12 @@ body.click-through #titlebar {
   padding: 8px 10px;
   margin-bottom: 6px;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.22);
   cursor: grab;
   transition: background 0.15s;
 }
 .task-item:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.34);
 }
 .task-item.done .task-title {
   text-decoration: line-through;
@@ -278,19 +279,26 @@ body.click-through #titlebar {
 .month-cell {
   min-height: 56px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
   padding: 4px;
   font-size: 12px;
   cursor: pointer;
 }
 .month-cell.other {
-  opacity: 0.35;
+  opacity: 0.3;
+  background: transparent;
 }
 .month-cell.today {
-  outline: 1px solid var(--theme);
+  outline: 2px solid var(--theme);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.18);
 }
 .month-cell .dnum {
+  color: var(--text);
+  font-weight: 600;
+}
+.month-cell.other .dnum {
   color: var(--text-dim);
+  font-weight: 400;
 }
 .month-dot {
   display: inline-block;
@@ -307,7 +315,7 @@ body.click-through #titlebar {
   gap: 6px;
 }
 .week-col {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   padding: 6px;
   min-height: 300px;
@@ -354,7 +362,7 @@ body.click-through #titlebar {
   width: 320px;
   max-height: 86%;
   overflow-y: auto;
-  background: rgba(28, 32, 44, 0.92);
+  background: rgba(20, 24, 34, 0.94);
   border: 1px solid var(--glass-border);
   border-radius: 14px;
   padding: 16px;
@@ -380,7 +388,7 @@ body.click-through #titlebar {
   padding: 7px 9px;
   border-radius: 8px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
   color: var(--text);
   font-size: 13px;
 }
@@ -431,7 +439,7 @@ body.click-through #titlebar {
   margin-left: 24px;
 }
 .ai-msg.bot {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
   margin-right: 24px;
 }
 .ai-tabs {
