@@ -1,0 +1,142 @@
+import type { Task } from '@shared/types'
+import { $, el, dateKey, parseDate, repeatLabel, WEEKDAYS, startOfWeek, addDays, todayKey } from '../utils'
+import { renderTaskItem, openTaskModal } from '../components/components'
+
+/** 判断任务在某天是否出现（含重复展开） */
+function taskOnDate(t: Task, day: Date): boolean {
+  const dk = dateKey(day)
+  if (t.repeat === 'none') {
+    const pd = parseDate(t.date)
+    return !!pd && dateKey(pd) === dk
+  }
+  const dow = day.getDay()
+  const base = parseDate(t.date) || new Date(t.createdAt)
+  switch (t.repeat) {
+    case 'daily':
+      return true
+    case 'weekday':
+      return dow >= 1 && dow <= 5
+    case 'weekly':
+      return base.getDay() === dow
+    case 'monthly':
+      return base.getDate() === day.getDate()
+    case 'custom': {
+      const n = t.everyNDays ?? 1
+      const days = Math.floor((day.getTime() - base.getTime()) / 86_400_000)
+      return days >= 0 && days % n === 0
+    }
+    default:
+      return false
+  }
+}
+
+function tasksForDay(day: Date): Task[] {
+  const all = (window as any).__state.tasks as Task[]
+  return all
+    .filter((t) => taskOnDate(t, day))
+    .sort((a, b) => (parseDate(a.date)?.getTime() || 0) - (parseDate(b.date)?.getTime() || 0))
+}
+
+const MONTH_NAMES = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+
+export function renderMonth(container: HTMLElement): void {
+  container.innerHTML = ''
+  const lists = (window as any).__state.lists
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  $('#period-label')!.textContent = `${y}年 ${MONTH_NAMES[m]}`
+
+  const first = new Date(y, m, 1)
+  const startDow = first.getDay()
+  const gridStart = addDays(first, -startDow)
+  const grid = el('div', { class: 'month-grid' })
+  for (let i = 0; i < 42; i++) {
+    const day = addDays(gridStart, i)
+    const inMonth = day.getMonth() === m
+    const dk = dateKey(day)
+    const cell = el('div', { class: `month-cell${inMonth ? '' : ' other'}${dk === todayKey() ? ' today' : ''}` })
+    cell.append(el('div', { class: 'dnum', text: String(day.getDate()) }))
+    for (const t of tasksForDay(day).slice(0, 4)) {
+      const list = lists.find((l: any) => l.id === t.listId)
+      cell.append(el('span', { class: 'month-dot', style: `background:${list?.color || '#888'}` }))
+    }
+    cell.onclick = () => {
+      ;(window as any).__state.view = 'day'
+      ;(window as any).__render()
+    }
+    grid.append(cell)
+  }
+  container.append(grid)
+}
+
+export function renderWeek(container: HTMLElement): void {
+  container.innerHTML = ''
+  const start = startOfWeek(new Date())
+  $('#period-label')!.textContent = `${dateKey(start)} ~ ${dateKey(addDays(start, 6))}`
+  const grid = el('div', { class: 'week-grid' })
+  for (let i = 0; i < 7; i++) {
+    const day = addDays(start, i)
+    const col = el('div', { class: 'week-col' })
+    col.append(el('div', { class: 'wd', text: `周${WEEKDAYS[day.getDay()]} ${day.getDate()}` }))
+    for (const t of tasksForDay(day)) col.append(renderTaskItem(t))
+    grid.append(col)
+  }
+  container.append(grid)
+}
+
+export function renderDay(container: HTMLElement): void {
+  container.innerHTML = ''
+  const now = new Date()
+  $('#period-label')!.textContent = `${dateKey(now)} 周${WEEKDAYS[now.getDay()]}`
+  const axis = el('div', { class: 'day-axis' })
+
+  // 全天任务（无具体时间 / 重复任务无 date-time）：单独置顶展示一次
+  const allDay = tasksForDay(now).filter((t) => !parseDate(t.date)?.getHours() && (t.repeat !== 'none' || !t.date))
+  if (allDay.length) {
+    const strip = el('div', { class: 'all-day', style: 'margin-bottom:8px' })
+    strip.append(el('div', { class: 'hh', text: '全天' }))
+    const body = el('div', { style: 'flex:1' })
+    for (const t of allDay) body.append(renderTaskItem(t))
+    strip.append(body)
+    axis.append(strip)
+  }
+
+  for (let h = 0; h < 24; h++) {
+    const row = el('div', { class: 'day-hour' })
+    row.append(el('div', { class: 'hh', text: `${String(h).padStart(2, '0')}:00` }))
+    const body = el('div', { style: 'flex:1' })
+    const day = new Date(now)
+    day.setHours(h)
+    for (const t of tasksForHour(day, h)) body.append(renderTaskItem(t))
+    row.append(body)
+    axis.append(row)
+  }
+  container.append(axis)
+}
+
+/** 按小时过滤：仅返回该小时有具体时刻的任务（重复任务有 reminder 时间也算） */
+function tasksForHour(day: Date, h: number): Task[] {
+  const all = (window as any).__state.tasks as Task[]
+  return all
+    .filter((t) => taskOnDate(t, day))
+    .filter((t) => {
+      const pd = parseDate(t.date)
+      if (pd) return pd.getHours() === h // 具体时间任务，按小时匹配
+      // 无具体时间的重复任务已归入全天区，这里不重复
+      return false
+    })
+    .sort((a, b) => (parseDate(a.date)?.getMinutes() || 0) - (parseDate(b.date)?.getMinutes() || 0))
+}
+
+export function renderView(): void {
+  const v = (window as any).__state.view as string
+  const view = $('#view')!
+  if (v === 'day') renderDay(view)
+  else if (v === 'week') renderWeek(view)
+  else renderMonth(view)
+  // 高亮视图按钮
+  document.querySelectorAll('.view-switch button').forEach((b) => {
+    b.classList.toggle('active', (b as HTMLElement).dataset.view === v)
+  })
+}

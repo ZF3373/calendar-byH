@@ -1,0 +1,54 @@
+{
+  "name": "desktopflow",
+  "version": "1.0.0",
+  "description": "DesktopFlow / 桌面流 - 常驻桌面半透明毛玻璃日程管理工具",
+  "main": "out/main/index.js",
+  "author": "DesktopFlow",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build && node scripts/postbuild.mjs",
+    "start": "electron-vite preview",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --win nsis",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "lowdb": "^7.0.1"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@types/node": "^22.10.2",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "ws": "^8.21.0"
+  },
+  "build": {
+    "appId": "com.desktopflow.app",
+    "productName": "DesktopFlow",
+    "copyright": "Copyright © 2026 DesktopFlow",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "resources/**/*"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": "x64" }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "DesktopFlow"
+    }
+  }
+}

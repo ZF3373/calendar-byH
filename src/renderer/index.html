@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DesktopFlow 桌面流</title>
+    <link rel="stylesheet" href="./src/styles/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- 拖拽标题栏 -->
+      <header id="titlebar">
+        <span class="logo">🌊</span>
+        <span class="title">桌面流</span>
+        <div class="title-actions">
+          <button id="btn-new" title="新建任务">＋</button>
+          <button id="btn-settings" title="设置">⚙</button>
+          <button id="btn-hide" title="隐藏到托盘">—</button>
+        </div>
+      </header>
+
+      <div id="layout">
+        <!-- 左侧清单栏 -->
+        <aside id="sidebar"></aside>
+
+        <!-- 主区 -->
+        <main id="main">
+          <div id="topbar">
+            <div class="view-switch">
+              <button data-view="day">日</button>
+              <button data-view="week">周</button>
+              <button data-view="month">月</button>
+            </div>
+            <div id="period-label"></div>
+            <div class="top-actions">
+              <button id="btn-ai" title="AI 助手">✨ AI</button>
+            </div>
+          </div>
+          <section id="view"></section>
+        </main>
+      </div>
+    </div>
+
+    <!-- 弹层：新建/编辑任务 -->
+    <div id="task-modal" class="modal hidden"></div>
+    <!-- 弹层：设置 -->
+    <div id="settings-modal" class="modal hidden"></div>
+    <!-- 弹层：AI 面板 -->
+    <div id="ai-panel" class="modal hidden"></div>
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script type="module" src="./src/app.ts"></script>
+  </body>
+</html>
