@@ -50,6 +50,8 @@ body.click-through input,
 body.click-through select,
 body.click-through textarea,
 body.click-through .task-item,
+body.click-through .list-item,
+body.click-through .month-cell,
 body.click-through .modal,
 body.click-through #titlebar {
   pointer-events: auto;
