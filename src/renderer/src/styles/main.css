@@ -282,34 +282,46 @@ body.click-through #titlebar {
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 5px;
 }
 .month-cell {
-  min-height: 56px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 4px;
-  font-size: 12px;
+  min-height: 62px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 5px 6px;
+  font-size: 13px;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.month-cell:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 .month-cell.other {
-  opacity: 0.3;
+  opacity: 0.55;
   background: transparent;
+  border-color: transparent;
 }
 .month-cell.today {
   outline: 2px solid var(--theme);
-  background: rgba(var(--theme-rgb, 79, 140, 255), 0.18);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.32);
+  border-color: transparent;
 }
 .month-cell .dnum {
-  color: #16202e;
+  color: #fff;
   font-weight: 700;
+  font-size: 15px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 .month-cell.other .dnum {
-  color: rgba(20, 30, 45, 0.45);
-  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
 .month-cell.today .dnum {
-  color: #0b1220;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 .month-dot {
   display: inline-block;
@@ -326,17 +338,26 @@ body.click-through #titlebar {
   gap: 6px;
 }
 .week-col {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
   padding: 6px;
   min-height: 300px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.week-col:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 .week-col .wd {
   text-align: center;
-  font-size: 12px;
-  color: #16202e;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 13px;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* 日视图时间轴 */
@@ -346,15 +367,16 @@ body.click-through #titlebar {
 .day-hour {
   display: flex;
   gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 .day-hour .hh {
-  width: 42px;
-  color: #16202e;
-  font-weight: 600;
-  font-size: 12px;
+  width: 46px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
   flex-shrink: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 /* 弹层 */
