@@ -31,7 +31,7 @@ export const todayKey = () => dateKey(new Date())
 
 export function parseDate(s?: string): Date | null {
   if (!s) return null
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/)
   if (!m) return null
   const [, y, mo, d, h, mi] = m
   return new Date(Number(y), Number(mo) - 1, Number(d), h ? Number(h) : 0, mi ? Number(mi) : 0)

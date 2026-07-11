@@ -21,6 +21,9 @@ export function renderTaskItem(t: Task): HTMLElement {
   const meta: string[] = []
   const pd = parseDate(t.date)
   if (pd) meta.push(`${pad(pd.getMonth() + 1)}/${pad(pd.getDate())}`)
+  const pe = parseDate(t.endDate)
+  if (pd && pe) meta.push(`${pad(pd.getHours())}:${pad(pd.getMinutes())}–${pad(pe.getHours())}:${pad(pe.getMinutes())}`)
+  else if (pd) meta.push(`${pad(pd.getHours())}:${pad(pd.getMinutes())}`)
   const rl = repeatLabel(t.repeat)
   if (rl) meta.push(rl)
   if (t.reminders.length) meta.push(`🔔${t.reminders.map((r: any) => r.time).join('/')}`)
@@ -73,6 +76,17 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
   // list select 需要 id
   ;(listField.querySelector('select') as HTMLSelectElement).id = 'f-list'
   const dateField = field('日期时间', () => input({ id: 'f-date', type: 'datetime-local' }, dateVal))
+  const endVal = t?.endDate ? (() => { const e = parseDate(t.endDate); return e ? `${dateKey(e)}T${pad(e.getHours())}:${pad(e.getMinutes())}` : '' })() : ''
+  const endField = field('结束时间(课程时间段)', () => input({ id: 'f-end', type: 'datetime-local' }, endVal))
+  ;(endField.querySelector('input') as HTMLInputElement).style.display = 'none' // 默认隐藏，选课程时显示
+  // 选课程清单时显示"结束时间"，构成时间段
+  const listSel = listField.querySelector('select') as HTMLSelectElement
+  const endInput = endField.querySelector('input') as HTMLInputElement
+  const syncEndVisibility = () => {
+    endInput.style.display = listSel.value === 'course' ? '' : 'none'
+  }
+  listSel.addEventListener('change', syncEndVisibility)
+  syncEndVisibility()
   const repeatField = field(
     '重复',
     () => select(REPEAT_OPTS.map((o) => ({ value: o.v, label: o.label, selected: t?.repeat === o.v })))
@@ -95,6 +109,7 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
     const everyNDays = Number(($('#f-custom') as HTMLInputElement).value) || 2
     const remindRaw = ($('#f-remind') as HTMLInputElement).value
     const note = ($('#f-note') as HTMLTextAreaElement).value
+    const endDateRaw = ($('#f-end') as HTMLInputElement).value
     const reminders = remindRaw
       .split(',')
       .map((s) => s.trim())
@@ -111,6 +126,7 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
       done: t?.done || false
     }
     if (dateRaw) payload.date = dateRaw.replace('T', ' ')
+    if (listId === 'course' && endDateRaw) payload.endDate = endDateRaw.replace('T', ' ')
     if (t) {
       await df.updateTask(t.id, payload)
     } else {

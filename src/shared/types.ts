@@ -32,6 +32,8 @@ export interface Task {
   done: boolean
   // 日期时间，使用本地时间 ISO 字符串 'YYYY-MM-DD' 或 'YYYY-MM-DDTHH:mm'
   date?: string
+  // 结束时间（时间段，如课程排期）；'YYYY-MM-DDTHH:mm'
+  endDate?: string
   // 重复
   repeat: RepeatType
   everyNDays?: number // repeat==='custom' 时生效
