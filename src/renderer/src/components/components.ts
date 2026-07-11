@@ -4,10 +4,10 @@ import { $, el, toast, parseDate, pad, dateKey, repeatLabel, todayKey } from '..
 const df = (window as any).df
 
 /** 渲染单个任务项（可勾选/拖拽/删除/点击编辑） */
-export function renderTaskItem(t: Task): HTMLElement {
+export function renderTaskItem(t: Task, continues = false): HTMLElement {
   const lists = (window as any).__state.lists
   const list = lists.find((l: any) => l.id === t.listId)
-  const item = el('div', { class: `task-item${t.done ? ' done' : ''}`, draggable: 'true' })
+  const item = el('div', { class: `task-item${t.done ? ' done' : ''}${continues ? ' continues' : ''}`, draggable: 'true' })
   item.dataset.id = t.id
 
   const check = el('div', { class: 'task-check', text: t.done ? '✓' : '' })
@@ -16,7 +16,7 @@ export function renderTaskItem(t: Task): HTMLElement {
     await df.updateTask(t.id, { done: !t.done })
     ;(window as any).__render()
   }
-  const title = el('div', { class: 'task-title', text: t.title })
+  const title = el('div', { class: 'task-title', text: continues ? '↡ ' + t.title : t.title })
 
   const meta: string[] = []
   const pd = parseDate(t.date)

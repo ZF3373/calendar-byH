@@ -229,6 +229,15 @@ body.click-through #titlebar {
   text-decoration: line-through;
   color: var(--text-dim);
 }
+.task-item.continues {
+  background: rgba(0, 0, 0, 0.14);
+  margin-left: 10px;
+  border-left: 2px solid var(--theme);
+}
+.task-item.continues .task-check,
+.task-item.continues .task-del {
+  display: none;
+}
 .task-check {
   width: 18px;
   height: 18px;

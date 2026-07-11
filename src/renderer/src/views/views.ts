@@ -109,7 +109,7 @@ export function renderDay(container: HTMLElement): void {
     const body = el('div', { style: 'flex:1' })
     const day = new Date(now)
     day.setHours(h)
-    for (const t of tasksForHour(day, h)) body.append(renderTaskItem(t))
+    for (const { t, continues } of tasksForHour(day, h)) body.append(renderTaskItem(t, continues))
     row.append(body)
     row.onclick = (e) => {
       // 点空白时间行 → 以该小时为预设时间打开新建
@@ -121,18 +121,21 @@ export function renderDay(container: HTMLElement): void {
   container.append(axis)
 }
 
-/** 按小时过滤：仅返回该小时有具体时刻的任务（重复任务有 reminder 时间也算） */
-function tasksForHour(day: Date, h: number): Task[] {
+/** 按小时返回该小时应显示的任务；带 endDate 的时间段任务会跨多小时逐行铺开 */
+function tasksForHour(day: Date, h: number): { t: Task; continues: boolean }[] {
   const all = (window as any).__state.tasks as Task[]
-  return all
-    .filter((t) => taskOnDate(t, day))
-    .filter((t) => {
-      const pd = parseDate(t.date)
-      if (pd) return pd.getHours() === h // 具体时间任务，按小时匹配
-      // 无具体时间的重复任务已归入全天区，这里不重复
-      return false
-    })
-    .sort((a, b) => (parseDate(a.date)?.getMinutes() || 0) - (parseDate(b.date)?.getMinutes() || 0))
+  const out: { t: Task; continues: boolean }[] = []
+  for (const t of all) {
+    if (!taskOnDate(t, day)) continue
+    const pd = parseDate(t.date)
+    const pe = parseDate(t.endDate)
+    if (!pd) continue // 无具体时间的重复任务已在全天区
+    const sh = pd.getHours()
+    if (sh === h) out.push({ t, continues: false }) // 起点
+    else if (pe && h > sh && h <= pe.getHours()) out.push({ t, continues: true }) // 跨行中段/末端
+  }
+  out.sort((a, b) => (parseDate(a.t.date)?.getMinutes() || 0) - (parseDate(b.t.date)?.getMinutes() || 0))
+  return out
 }
 
 export function renderView(): void {
