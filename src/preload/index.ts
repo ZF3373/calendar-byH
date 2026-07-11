@@ -23,7 +23,6 @@ const api = {
   windowHide: () => ipcRenderer.send('window:hide'),
   windowShow: () => ipcRenderer.send('window:show'),
   windowSnap: () => ipcRenderer.send('window:snap'),
-  windowDrag: (dx: number, dy: number) => ipcRenderer.send('window:drag', dx, dy),
 
   // 事件订阅
   onSettingsChanged: (cb: (s: AppSettings) => void) => {

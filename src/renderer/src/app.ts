@@ -117,30 +117,9 @@ function bindEvents(): void {
     }
   })
 
-  // 标题栏拖拽：mousedown 记录起点，mousemove 实时发增量给主进程移动窗口
-  const tb = $('#titlebar')!
-  let dragging = false
-  let lastX = 0
-  let lastY = 0
-  tb.addEventListener('mousedown', (e) => {
-    dragging = true
-    lastX = e.clientX
-    lastY = e.clientY
-  })
-  window.addEventListener('mouseup', () => {
-    if (dragging) {
-      dragging = false
-      df.windowSnap() // 拖拽结束吸附边缘
-    }
-  })
-  window.addEventListener('mousemove', (e) => {
-    if (!dragging) return
-    const dx = e.clientX - lastX
-    const dy = e.clientY - lastY
-    lastX = e.clientX
-    lastY = e.clientY
-    df.windowDrag(dx, dy)
-  })
+  // 拖动由 CSS -webkit-app-region: drag 原生处理（零抖动）；
+  // 拖拽结束后吸附边缘
+  $('#titlebar')!.addEventListener('mouseup', () => df.windowSnap())
 
   // 点击遮罩关闭弹层
   ;['task-modal', 'settings-modal', 'ai-panel'].forEach((id) => {

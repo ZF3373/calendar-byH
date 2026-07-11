@@ -67,9 +67,15 @@ body.click-through #titlebar {
   user-select: none;
   border-bottom: 1px solid var(--glass-border);
   background: rgba(0, 0, 0, 0.22);
+  -webkit-app-region: drag;
 }
 #titlebar:active {
   cursor: grabbing;
+}
+#titlebar .logo,
+#titlebar .title,
+#titlebar .title-actions {
+  -webkit-app-region: no-drag;
 }
 #titlebar .logo {
   font-size: 16px;
