@@ -62,8 +62,8 @@ export function renderMonth(container: HTMLElement): void {
       cell.append(el('span', { class: 'month-dot', style: `background:${list?.color || '#888'}` }))
     }
     cell.onclick = () => {
-      ;(window as any).__state.view = 'day'
-      ;(window as any).__render()
+      const preset = `${dateKey(day)} 09:00`
+      openTaskModal(undefined, preset)
     }
     grid.append(cell)
   }
@@ -80,6 +80,7 @@ export function renderWeek(container: HTMLElement): void {
     const col = el('div', { class: 'week-col' })
     col.append(el('div', { class: 'wd', text: `周${WEEKDAYS[day.getDay()]} ${day.getDate()}` }))
     for (const t of tasksForDay(day)) col.append(renderTaskItem(t))
+    col.onclick = () => openTaskModal(undefined, `${dateKey(day)} 09:00`)
     grid.append(col)
   }
   container.append(grid)
@@ -110,6 +111,11 @@ export function renderDay(container: HTMLElement): void {
     day.setHours(h)
     for (const t of tasksForHour(day, h)) body.append(renderTaskItem(t))
     row.append(body)
+    row.onclick = (e) => {
+      // 点空白时间行 → 以该小时为预设时间打开新建
+      if ((e.target as HTMLElement).closest('.task-item')) return
+      openTaskModal(undefined, `${dateKey(day)} ${String(h).padStart(2, '0')}:00`)
+    }
     axis.append(row)
   }
   container.append(axis)

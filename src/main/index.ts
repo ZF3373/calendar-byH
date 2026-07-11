@@ -73,6 +73,12 @@ function registerIpc(scheduler: ReminderScheduler): void {
   ipcMain.on('window:hide', () => winMgr.getWindow()?.hide())
   ipcMain.on('window:show', () => winMgr.getWindow()?.show())
   ipcMain.on('window:snap', () => winMgr.snapToEdge())
+  ipcMain.on('window:drag', (_e, dx: number, dy: number) => {
+    const w = winMgr.getWindow()
+    if (!w) return
+    const [x, y] = w.getPosition()
+    w.setPosition(x + dx, y + dy)
+  })
   ipcMain.on('scheduler:reset', () => {
     scheduler.stop()
     scheduler.start()

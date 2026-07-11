@@ -50,12 +50,12 @@ const REPEAT_OPTS: { v: RepeatType; label: string }[] = [
   { v: 'custom', label: '自定义(天)' }
 ]
 
-/** 新建/编辑任务弹层 */
-export function openTaskModal(existing?: Task): void {
+/** 新建/编辑任务弹层；presetDate 为点击视图位置预填的日期时间(YYYY-MM-DD HH:mm) */
+export function openTaskModal(existing?: Task, presetDate?: string): void {
   const modal = $('#task-modal')!
   const lists = (window as any).__state.lists as any[]
   const t = existing
-  const pd = t ? parseDate(t.date) : null
+  const pd = t ? parseDate(t.date) : presetDate ? parseDate(presetDate.replace(' ', 'T')) : null
   const dateVal = pd ? `${dateKey(pd)}T${pad(pd.getHours())}:${pad(pd.getMinutes())}` : ''
 
   modal.innerHTML = ''

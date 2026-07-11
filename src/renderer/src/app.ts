@@ -105,7 +105,6 @@ function promptAddList(): void {
 
 /** 事件绑定 */
 function bindEvents(): void {
-  $('#btn-new')!.onclick = () => openTaskModal()
   $('#btn-settings')!.onclick = () => openSettings()
   $('#btn-ai')!.onclick = () => openAIPanel()
   $('#btn-hide')!.onclick = () => df.windowHide()
@@ -118,27 +117,29 @@ function bindEvents(): void {
     }
   })
 
-  // 标题栏拖拽（发送 snap 由 main 处理边缘吸附）
+  // 标题栏拖拽：mousedown 记录起点，mousemove 实时发增量给主进程移动窗口
   const tb = $('#titlebar')!
-  let drag = false
-  let sx = 0
-  let sy = 0
+  let dragging = false
+  let lastX = 0
+  let lastY = 0
   tb.addEventListener('mousedown', (e) => {
-    drag = true
-    sx = e.clientX
-    sy = e.clientY
+    dragging = true
+    lastX = e.clientX
+    lastY = e.clientY
   })
   window.addEventListener('mouseup', () => {
-    if (drag) {
-      drag = false
-      df.windowSnap()
+    if (dragging) {
+      dragging = false
+      df.windowSnap() // 拖拽结束吸附边缘
     }
   })
   window.addEventListener('mousemove', (e) => {
-    if (!drag) return
-    // 透传位移给主进程需额外实现；此处仅触发 snap 逻辑
-    void (sx - e.clientX)
-    void (sy - e.clientY)
+    if (!dragging) return
+    const dx = e.clientX - lastX
+    const dy = e.clientY - lastY
+    lastX = e.clientX
+    lastY = e.clientY
+    df.windowDrag(dx, dy)
   })
 
   // 点击遮罩关闭弹层

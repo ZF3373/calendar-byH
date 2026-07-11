@@ -295,12 +295,15 @@ body.click-through #titlebar {
   background: rgba(var(--theme-rgb, 79, 140, 255), 0.18);
 }
 .month-cell .dnum {
-  color: var(--text);
-  font-weight: 600;
+  color: #16202e;
+  font-weight: 700;
 }
 .month-cell.other .dnum {
-  color: var(--text-dim);
+  color: rgba(20, 30, 45, 0.45);
   font-weight: 400;
+}
+.month-cell.today .dnum {
+  color: #0b1220;
 }
 .month-dot {
   display: inline-block;
@@ -325,7 +328,8 @@ body.click-through #titlebar {
 .week-col .wd {
   text-align: center;
   font-size: 12px;
-  color: var(--text-dim);
+  color: #16202e;
+  font-weight: 600;
   margin-bottom: 4px;
 }
 
@@ -341,7 +345,8 @@ body.click-through #titlebar {
 }
 .day-hour .hh {
   width: 42px;
-  color: var(--text-dim);
+  color: #16202e;
+  font-weight: 600;
   font-size: 12px;
   flex-shrink: 0;
 }
