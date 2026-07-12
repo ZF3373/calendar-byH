@@ -189,6 +189,22 @@ body.click-through #titlebar {
 .view-switch button.active {
   background: var(--theme);
 }
+.period-nav {
+  display: flex;
+  gap: 4px;
+}
+.period-nav button {
+  min-width: 32px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  cursor: pointer;
+}
+.period-nav button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
 #period-label {
   flex: 1;
   text-align: center;
@@ -293,6 +309,12 @@ body.click-through #titlebar {
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
 }
+.month-weekhead {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  padding: 2px 0;
+}
 .month-cell {
   min-height: 62px;
   border-radius: 9px;
@@ -353,6 +375,10 @@ body.click-through #titlebar {
   padding: 6px;
   min-height: 300px;
   transition: background 0.15s, border-color 0.15s;
+}
+.week-col.today {
+  border-color: rgba(var(--theme-rgb, 79, 140, 255), 0.7);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.12);
 }
 .week-col:hover {
   background: rgba(0, 0, 0, 0.4);

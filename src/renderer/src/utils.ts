@@ -82,7 +82,8 @@ export const state = {
   settings: {} as AppSettings,
   ai: {} as AISettings,
   view: 'month' as 'day' | 'week' | 'month',
-  activeList: '' as string // '' = 全部
+  activeList: '' as string, // '' = 全部
+  cursorDate: new Date()
 }
 
 // 暴露到 window，供子模块（views/components）共享同一状态实例

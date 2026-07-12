@@ -1,5 +1,5 @@
 import { $, el, toast } from './utils'
-import { renderView } from './views/views'
+import { renderView, jumpToday, shiftCursor } from './views/views'
 import { openTaskModal, openSettings, closeModal } from './components/components'
 import { openAIPanel } from './api/ai-panel'
 import type { Task, TaskList, AppSettings, AISettings } from '@shared/types'
@@ -16,6 +16,7 @@ async function main(): Promise<void> {
   state.ai = data.ai
   state.view = 'month'
   state.activeList = ''
+  state.cursorDate = new Date()
 
   bindEvents()
   applySettingsToDom(state.settings)
@@ -108,6 +109,9 @@ function bindEvents(): void {
   $('#btn-settings')!.onclick = () => openSettings()
   $('#btn-ai')!.onclick = () => openAIPanel()
   $('#btn-hide')!.onclick = () => df.windowHide()
+  $('#btn-prev')!.onclick = () => shiftCursor(-1)
+  $('#btn-next')!.onclick = () => shiftCursor(1)
+  $('#btn-today')!.onclick = () => jumpToday()
 
   // 视图切换
   document.querySelectorAll('.view-switch button').forEach((b) => {
