@@ -1,5 +1,5 @@
 import type { Task } from '@shared/types'
-import { $, el, dateKey, parseDate, WEEKDAYS, startOfWeek, addDays, todayKey } from '../utils'
+import { $, el, dateKey, parseDate, WEEKDAYS, startOfWeek, addDays, todayKey, pad } from '../utils'
 import { renderTaskItem, openTaskModal } from '../components/components'
 
 /** 判断任务在某天是否出现（含重复展开） */
@@ -50,6 +50,12 @@ function getCursorDate(): Date {
 
 const MONTH_NAMES = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
 
+function taskBrief(task: Task): string {
+  const d = parseDate(task.date)
+  if (!d) return task.title
+  return `${pad(d.getHours())}:${pad(d.getMinutes())} ${task.title}`
+}
+
 export function renderMonth(container: HTMLElement): void {
   container.innerHTML = ''
   const lists = (window as any).__state.lists
@@ -69,16 +75,22 @@ export function renderMonth(container: HTMLElement): void {
     const day = addDays(gridStart, i)
     const inMonth = day.getMonth() === m
     const dk = dateKey(day)
-    const cell = el('div', { class: `month-cell${inMonth ? '' : ' other'}${dk === todayKey() ? ' today' : ''}` })
+    const dayTasks = tasksForDay(day)
+    const cell = el('div', {
+      class: `month-cell${inMonth ? '' : ' other'}${dk === todayKey() ? ' today' : ''}`
+    })
     cell.append(el('div', { class: 'dnum', text: String(day.getDate()) }))
-    for (const t of tasksForDay(day).slice(0, 4)) {
+    for (const t of dayTasks.slice(0, 2)) {
       const list = lists.find((l: any) => l.id === t.listId)
-      cell.append(el('span', { class: 'month-dot', style: `background:${list?.color || '#888'}` }))
+      const row = el('div', { class: 'month-task-mini' })
+      row.append(el('span', { class: 'month-dot', style: `background:${list?.color || '#888'}` }))
+      row.append(el('span', { class: 'month-mini-text', text: taskBrief(t) }))
+      cell.append(row)
     }
-    cell.onclick = () => {
-      const preset = `${dateKey(day)} 09:00`
-      openTaskModal(undefined, preset)
+    if (dayTasks.length > 2) {
+      cell.append(el('div', { class: 'month-more', text: `+${dayTasks.length - 2} 项` }))
     }
+    cell.onclick = () => openTaskModal(undefined, `${dateKey(day)} 09:00`)
     grid.append(cell)
   }
   container.append(grid)
@@ -94,7 +106,10 @@ export function renderWeek(container: HTMLElement): void {
     const col = el('div', { class: `week-col${dateKey(day) === todayKey() ? ' today' : ''}` })
     col.append(el('div', { class: 'wd', text: `周${WEEKDAYS[day.getDay()]} ${day.getDate()}` }))
     for (const t of tasksForDay(day)) col.append(renderTaskItem(t))
-    col.onclick = () => openTaskModal(undefined, `${dateKey(day)} 09:00`)
+    col.onclick = (e) => {
+      if ((e.target as HTMLElement).closest('.task-item')) return
+      openTaskModal(undefined, `${dateKey(day)} 09:00`)
+    }
     grid.append(col)
   }
   container.append(grid)

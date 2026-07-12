@@ -32,11 +32,12 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(16, 19, 28, 0.55);
+  background: linear-gradient(160deg, rgba(145, 166, 198, 0.42), rgba(95, 124, 176, 0.28));
   backdrop-filter: blur(28px) saturate(140%);
   -webkit-backdrop-filter: blur(28px) saturate(140%);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 18px 38px rgba(26, 50, 92, 0.2);
   overflow: hidden;
 }
 
@@ -109,57 +110,6 @@ body.click-through #titlebar {
   min-height: 0;
 }
 
-/* 侧栏 */
-#sidebar {
-  width: 132px;
-  flex-shrink: 0;
-  padding: 10px 8px;
-  border-right: 1px solid var(--glass-border);
-  overflow-y: auto;
-  background: rgba(0, 0, 0, 0.28);
-}
-.list-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 4px;
-}
-.list-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-.list-item.active {
-  background: rgba(var(--theme-rgb, 79, 140, 255), 0.22);
-}
-.list-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.list-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.list-count {
-  font-size: 11px;
-  color: var(--text-dim);
-}
-#add-list {
-  margin-top: 8px;
-  width: 100%;
-  padding: 6px;
-  border: 1px dashed var(--glass-border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-}
-
 /* 主区 */
 #main {
   flex: 1;
@@ -171,23 +121,29 @@ body.click-through #titlebar {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 8px 12px 10px;
   border-bottom: 1px solid var(--glass-border);
 }
 .view-switch {
   display: flex;
-  gap: 4px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 10px;
+  background: rgba(19, 24, 37, 0.75);
 }
 .view-switch button {
-  padding: 4px 12px;
+  min-width: 30px;
+  padding: 4px 9px;
   border: none;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.22);
-  color: var(--text);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
   cursor: pointer;
+  font-weight: 600;
 }
 .view-switch button.active {
-  background: var(--theme);
+  background: #39c973;
+  color: #f7fffb;
 }
 .period-nav {
   display: flex;
@@ -208,22 +164,31 @@ body.click-through #titlebar {
 #period-label {
   flex: 1;
   text-align: center;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 13px;
+  font-weight: 600;
 }
-#btn-ai {
-  padding: 4px 12px;
+.top-actions button {
+  padding: 6px 14px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(135deg, #7b5bff, #4f8cff);
+  background: linear-gradient(135deg, #39c973, #2ca8ff);
   color: #fff;
   cursor: pointer;
+  font-weight: 600;
+}
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+#btn-ai {
+  background: linear-gradient(135deg, #7b5bff, #3f8cff);
 }
 
 #view {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 12px;
+  padding: 10px;
 }
 
 /* 任务项 */
@@ -307,7 +272,7 @@ body.click-through #titlebar {
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 6px;
 }
 .month-weekhead {
   text-align: center;
@@ -316,9 +281,9 @@ body.click-through #titlebar {
   padding: 2px 0;
 }
 .month-cell {
-  min-height: 62px;
+  min-height: 78px;
   border-radius: 9px;
-  background: rgba(0, 0, 0, 0.28);
+  background: rgba(64, 82, 126, 0.34);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 5px 6px;
   font-size: 13px;
@@ -360,6 +325,24 @@ body.click-through #titlebar {
   height: 6px;
   border-radius: 50%;
   margin: 1px;
+}
+.month-task-mini {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.month-mini-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.month-more {
+  margin-top: 1px;
+  font-size: 11px;
+  color: rgba(178, 223, 255, 0.9);
 }
 
 /* 周视图 */
@@ -493,6 +476,16 @@ body.click-through #titlebar {
   cursor: pointer;
   margin-top: 6px;
 }
+.btn-danger {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid rgba(255, 110, 110, 0.45);
+  border-radius: 9px;
+  background: rgba(255, 74, 74, 0.18);
+  color: #ffd7d7;
+  cursor: pointer;
+  margin-top: 6px;
+}
 
 /* AI 面板 */
 .ai-msg {
@@ -529,6 +522,46 @@ body.click-through #titlebar {
 }
 .ai-tabs button.active {
   background: var(--theme);
+}
+.ai-todo-box {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.ai-todo-box.hidden {
+  display: none;
+}
+.ai-todo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.ai-todo-list {
+  width: 120px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.ai-todo-listing {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+.ai-todo-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Toast */

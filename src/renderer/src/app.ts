@@ -1,8 +1,8 @@
-import { $, el, toast } from './utils'
+import { $, toast } from './utils'
 import { renderView, jumpToday, shiftCursor } from './views/views'
-import { openTaskModal, openSettings, closeModal } from './components/components'
+import { openTaskModal, closeModal, openSettings } from './components/components'
 import { openAIPanel } from './api/ai-panel'
-import type { Task, TaskList, AppSettings, AISettings } from '@shared/types'
+import type { AppSettings, AISettings } from '@shared/types'
 import { state } from './utils'
 
 const df = (window as any).df
@@ -20,7 +20,6 @@ async function main(): Promise<void> {
 
   bindEvents()
   applySettingsToDom(state.settings)
-  renderSidebar()
   renderView()
 
   // 订阅主进程事件
@@ -59,56 +58,12 @@ function applySettingsToDom(s: AppSettings): void {
   document.body.classList.toggle('click-through', !!s.clickThrough)
 }
 
-/** 渲染左侧清单栏 */
-function renderSidebar(): void {
-  const sb = $('#sidebar')!
-  sb.innerHTML = ''
-  const allItem = el('div', { class: `list-item${state.activeList === '' ? ' active' : ''}` })
-  allItem.append(el('span', { class: 'list-dot', style: 'background:#bbb' }))
-  allItem.append(el('span', { class: 'list-name', text: '全部' }))
-  allItem.append(el('span', { class: 'list-count', text: String(state.tasks.length) }))
-  allItem.onclick = () => {
-    state.activeList = ''
-    renderSidebar()
-    renderView()
-  }
-  sb.append(allItem)
-
-  for (const l of state.lists as TaskList[]) {
-    const cnt = (state.tasks as Task[]).filter((t) => t.listId === l.id).length
-    const item = el('div', { class: `list-item${state.activeList === l.id ? ' active' : ''}` })
-    item.append(el('span', { class: 'list-dot', style: `background:${l.color}` }))
-    item.append(el('span', { class: 'list-name', text: l.name }))
-    item.append(el('span', { class: 'list-count', text: String(cnt) }))
-    item.onclick = () => {
-      state.activeList = l.id
-      renderSidebar()
-      renderView()
-    }
-    sb.append(item)
-  }
-
-  const add = el('button', { id: 'add-list', text: '＋ 新建清单' })
-  add.onclick = () => promptAddList()
-  sb.append(add)
-}
-
-function promptAddList(): void {
-  const name = prompt('清单名称：')
-  if (!name) return
-  const color = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
-  df.addList(name.trim(), color).then(() => df.getAll().then((d: any) => {
-    state.lists = d.lists
-    state.tasks = d.tasks
-    renderSidebar()
-  }))
-}
-
 /** 事件绑定 */
 function bindEvents(): void {
   $('#btn-settings')!.onclick = () => openSettings()
-  $('#btn-ai')!.onclick = () => openAIPanel()
   $('#btn-hide')!.onclick = () => df.windowHide()
+  $('#btn-ai')!.onclick = () => openAIPanel()
+  $('#btn-new-task')!.onclick = () => openTaskModal(undefined, undefined)
   $('#btn-prev')!.onclick = () => shiftCursor(-1)
   $('#btn-next')!.onclick = () => shiftCursor(1)
   $('#btn-today')!.onclick = () => jumpToday()
@@ -147,7 +102,6 @@ function bindEvents(): void {
       state.tasks = d.tasks
       state.settings = d.settings
       state.ai = d.ai
-      renderSidebar()
       renderView()
       applySettingsToDom(state.settings)
     })

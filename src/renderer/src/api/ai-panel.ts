@@ -8,6 +8,18 @@ interface Msg {
   text: string
 }
 
+function parseTodoDrafts(raw: string): string[] {
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^[-*]\s*\[[ xX]?\]\s*/, ''))
+    .map((line) => line.replace(/^[-*]\s*/, ''))
+    .map((line) => line.replace(/^\d+[.)、]\s*/, ''))
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
 /** AI 助手弹层：周报 / 拆待办 / 问答 */
 export function openAIPanel(): void {
   const modal = $('#ai-panel')!
@@ -43,11 +55,53 @@ export function openAIPanel(): void {
   const input = el('textarea', { rows: '3', placeholder: '问我点什么，或描述要拆解的任务…' }) as HTMLTextAreaElement
   const send = el('button', { class: 'btn-primary', text: '发送' })
   card.append(input, send)
+  const todoBox = el('div', { class: 'ai-todo-box hidden' })
+  const todoHead = el('div', { class: 'ai-todo-head' })
+  todoHead.append(el('span', { text: 'AI待办' }))
+  const listSel = document.createElement('select')
+  listSel.className = 'ai-todo-list'
+  const lists = (window as any).__state.lists as any[]
+  const active = (window as any).__state.activeList as string
+  const defaultListId = active || lists[0]?.id || 'work'
+  for (const l of lists) {
+    const op = document.createElement('option')
+    op.value = l.id
+    op.textContent = l.name
+    if (l.id === defaultListId) op.selected = true
+    listSel.append(op)
+  }
+  todoHead.append(listSel)
+  todoBox.append(todoHead)
+  const todoList = el('div', { class: 'ai-todo-listing' })
+  todoBox.append(todoList)
+  const createBtn = el('button', { class: 'btn-primary', text: '创建AI待办' })
+  createBtn.classList.add('hidden')
+  todoBox.append(createBtn)
+  card.append(todoBox)
   const close = el('button', { class: 'btn-ghost', text: '关闭' })
   close.onclick = () => closeModal(modal)
   card.append(close)
 
   const msgs: Msg[] = []
+  let drafts: string[] = []
+  const renderDrafts = () => {
+    todoList.innerHTML = ''
+    if (!drafts.length) {
+      todoList.append(el('div', { class: 'empty-hint', text: '拆待办后会显示可导入任务。' }))
+      createBtn.classList.add('hidden')
+      return
+    }
+    for (const title of drafts) {
+      const row = el('label', { class: 'ai-todo-item' })
+      const checkbox = document.createElement('input')
+      checkbox.type = 'checkbox'
+      checkbox.checked = true
+      checkbox.dataset.title = title
+      row.append(checkbox, el('span', { text: title }))
+      todoList.append(row)
+    }
+    createBtn.classList.remove('hidden')
+  }
   const renderMsgs = () => {
     box.innerHTML = ''
     for (const m of msgs) box.append(el('div', { class: `ai-msg ${m.role}`, text: m.text }))
@@ -67,6 +121,11 @@ export function openAIPanel(): void {
         { offline: false }
       )
       msgs.push({ role: 'bot', text })
+      if (td.classList.contains('active')) {
+        drafts = parseTodoDrafts(text)
+        todoBox.classList.remove('hidden')
+        renderDrafts()
+      }
     } catch (e: any) {
       msgs.push({ role: 'bot', text: '⚠ ' + (e?.message || '请求失败') })
     }
@@ -104,6 +163,8 @@ export function openAIPanel(): void {
   const selectTab = (btn: HTMLElement) => {
     ;[tb, tw, td].forEach((b) => b.classList.remove('active'))
     btn.classList.add('active')
+    todoBox.classList.toggle('hidden', btn !== td)
+    if (btn === td) renderDrafts()
     if (btn === tw) {
       input.placeholder = '输入日期范围，如：本周'
       input.value = '请为本周生成周报'
@@ -118,6 +179,31 @@ export function openAIPanel(): void {
   tb.onclick = () => selectTab(tb)
   tw.onclick = () => selectTab(tw)
   td.onclick = () => selectTab(td)
+  createBtn.onclick = async () => {
+    const checks = todoList.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+    const picked = [...checks].filter((c) => c.checked).map((c) => c.dataset.title || '').filter(Boolean)
+    if (!picked.length) return toast('请先勾选要创建的待办')
+    const listId = listSel.value
+    createBtn.setAttribute('disabled', 'true')
+    try {
+      await Promise.all(
+        picked.map((title) =>
+          df.addTask({
+            listId,
+            title,
+            repeat: 'none',
+            reminders: [],
+            note: 'AI 拆待办生成',
+            done: false
+          })
+        )
+      )
+      ;(window as any).__render()
+      toast(`已创建 ${picked.length} 条待办`)
+    } finally {
+      createBtn.removeAttribute('disabled')
+    }
+  }
 
   modal.append(card)
   modal.classList.remove('hidden')

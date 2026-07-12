@@ -76,16 +76,28 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
   // list select 需要 id
   ;(listField.querySelector('select') as HTMLSelectElement).id = 'f-list'
   const dateField = field('日期时间', () => input({ id: 'f-date', type: 'datetime-local' }, dateVal))
-  const endVal = t?.endDate ? (() => { const e = parseDate(t.endDate); return e ? `${dateKey(e)}T${pad(e.getHours())}:${pad(e.getMinutes())}` : '' })() : ''
-  const endField = field('结束时间(课程时间段)', () => input({ id: 'f-end', type: 'datetime-local' }, endVal))
-  ;(endField.querySelector('input') as HTMLInputElement).style.display = 'none' // 默认隐藏，选课程时显示
-  // 选课程清单时显示"结束时间"，构成时间段
-  const listSel = listField.querySelector('select') as HTMLSelectElement
+  const endVal = t?.endDate
+    ? (() => {
+        const e = parseDate(t.endDate)
+        return e ? `${dateKey(e)}T${pad(e.getHours())}:${pad(e.getMinutes())}` : ''
+      })()
+    : ''
+  const timeModeField = field(
+    '时间类型',
+    () =>
+      select([
+        { value: 'point', label: '时间点', selected: !t?.endDate },
+        { value: 'range', label: '时间段', selected: !!t?.endDate }
+      ])
+  )
+  ;(timeModeField.querySelector('select') as HTMLSelectElement).id = 'f-time-mode'
+  const endField = field('结束时间', () => input({ id: 'f-end', type: 'datetime-local' }, endVal))
   const endInput = endField.querySelector('input') as HTMLInputElement
+  const timeModeSel = timeModeField.querySelector('select') as HTMLSelectElement
   const syncEndVisibility = () => {
-    endInput.style.display = listSel.value === 'course' ? '' : 'none'
+    endField.style.display = timeModeSel.value === 'range' ? '' : 'none'
   }
-  listSel.addEventListener('change', syncEndVisibility)
+  timeModeSel.addEventListener('change', syncEndVisibility)
   syncEndVisibility()
   const repeatField = field(
     '重复',
@@ -105,11 +117,15 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
     if (!title) return toast('标题不能为空')
     const listId = ($('#f-list') as HTMLSelectElement).value
     const dateRaw = ($('#f-date') as HTMLInputElement).value
+    if (!dateRaw) return toast('请先选择日期时间')
     const repeat = ($('#f-repeat') as HTMLSelectElement).value as RepeatType
     const everyNDays = Number(($('#f-custom') as HTMLInputElement).value) || 2
     const remindRaw = ($('#f-remind') as HTMLInputElement).value
     const note = ($('#f-note') as HTMLTextAreaElement).value
+    const timeMode = ($('#f-time-mode') as HTMLSelectElement).value
     const endDateRaw = ($('#f-end') as HTMLInputElement).value
+    if (timeMode === 'range' && !endDateRaw) return toast('时间段任务需要填写结束时间')
+    if (timeMode === 'range' && endDateRaw <= dateRaw) return toast('结束时间必须晚于开始时间')
     const reminders = remindRaw
       .split(',')
       .map((s) => s.trim())
@@ -126,7 +142,8 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
       done: t?.done || false
     }
     if (dateRaw) payload.date = dateRaw.replace('T', ' ')
-    if (listId === 'course' && endDateRaw) payload.endDate = endDateRaw.replace('T', ' ')
+    if (timeMode === 'range' && endDateRaw) payload.endDate = endDateRaw.replace('T', ' ')
+    else payload.endDate = undefined
     if (t) {
       await df.updateTask(t.id, payload)
     } else {
@@ -136,10 +153,20 @@ export function openTaskModal(existing?: Task, presetDate?: string): void {
     ;(window as any).__render()
     toast(t ? '已保存' : '已创建')
   }
+  const remove = el('button', { class: 'btn-danger', text: '删除任务' })
+  remove.onclick = async () => {
+    if (!t) return
+    await df.deleteTask(t.id)
+    closeModal(modal)
+    ;(window as any).__render()
+    toast('已删除')
+  }
   const cancel = el('button', { class: 'btn-ghost', text: '取消' })
   cancel.onclick = () => closeModal(modal)
 
-  card.append(titleField, listField, dateField, repeatField, customField, remindField, noteField, save, cancel)
+  card.append(titleField, listField, dateField, timeModeField, endField, repeatField, customField, remindField, noteField, save)
+  if (t) card.append(remove)
+  card.append(cancel)
   modal.append(card)
   modal.classList.remove('hidden')
 }
