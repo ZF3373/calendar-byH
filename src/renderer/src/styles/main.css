@@ -7,6 +7,9 @@
   --text-dim: rgba(242, 245, 250, 0.6);
   --font-size: 14px;
   --line-height: 1.6;
+  /* 统一的内部分隔线（柔化，避免硬边接缝） */
+  --hairline: rgba(255, 255, 255, 0.10);
+  --hairline-soft: rgba(255, 255, 255, 0.06);
 }
 
 * {
@@ -53,6 +56,12 @@ body.click-through textarea,
 body.click-through .task-item,
 body.click-through .list-item,
 body.click-through .month-cell,
+body.click-through .mini-cell,
+body.click-through .detail-task,
+body.click-through .detail-check,
+body.click-through .detail-task-body,
+body.click-through #detail,
+body.click-through #detail-resizer,
 body.click-through .modal,
 body.click-through #titlebar {
   pointer-events: auto;
@@ -66,8 +75,8 @@ body.click-through #titlebar {
   padding: 8px 12px;
   cursor: grab;
   user-select: none;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.22);
+  /* 去掉原本的暗色色块，改为与 #app 一致的顶部高光，消除硬接缝 */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
   -webkit-app-region: drag;
 }
 #titlebar:active {
@@ -110,6 +119,234 @@ body.click-through #titlebar {
   min-height: 0;
 }
 
+/* 右侧详情面板（对标参考 HTML 的右侧栏） */
+#detail {
+  width: 280px;
+  flex-shrink: 0;
+  margin: 10px 10px 10px 0;
+  border-radius: 14px;
+  background: rgba(30, 38, 60, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* 柔化边框 + 与 #app 一致的内顶高光，让两块玻璃面浑然一体 */
+  border: 1px solid var(--hairline-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  padding: 14px;
+  overflow-y: auto;
+}
+/* 详情面板拖拽分隔条 */
+#detail-resizer {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  margin: 10px 0;
+  border-radius: 3px;
+  /* 静止态给极淡的底色，使主区与面板的缝隙成为有意的视觉分隔而非空洞 */
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+  user-select: none;
+}
+#detail-resizer:hover,
+#detail-resizer.active {
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.6);
+}
+
+/* 窄屏下折叠详情面板 */
+@media (max-width: 720px) {
+  #detail,
+  #detail-resizer {
+    display: none;
+  }
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.detail-head i {
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+}
+.detail-head i:hover {
+  color: var(--theme);
+}
+
+/* 迷你日历 */
+.mini-cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 14px;
+}
+.mini-weekhead {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 2px 0;
+}
+.mini-cell {
+  text-align: center;
+  border-radius: 6px;
+  padding: 3px 0 2px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  transition: background 0.12s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.mini-cell:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.mini-cell.other {
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+.mini-cell.today .mini-dnum {
+  background: var(--theme);
+  color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+.mini-cell.selected {
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.35);
+  outline: 1px solid var(--theme);
+}
+/* 有任务的日子：清单色小圆点 */
+.mini-dots {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  align-items: center;
+  min-height: 4px;
+}
+.mini-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 选中日任务清单 */
+.detail-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+/* 详情面板任务卡片 */
+.detail-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--hairline-soft);
+  cursor: grab;
+  margin-bottom: 8px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.detail-task:active {
+  cursor: grabbing;
+}
+.detail-task.dragging {
+  opacity: 0.4;
+  border-color: var(--theme);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.18);
+}
+.detail-task:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(var(--theme-rgb, 79, 140, 255), 0.5);
+}
+.detail-task.done {
+  opacity: 0.62;
+  background: rgba(255, 255, 255, 0.03);
+}
+/* 勾选圈（点击切换完成） */
+.detail-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.detail-check:hover {
+  border-color: var(--theme);
+}
+.detail-check.done {
+  background: var(--theme);
+  border-color: var(--theme);
+}
+/* 任务主体 */
+.detail-task-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.detail-task-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  word-break: break-word;
+}
+.detail-task.done .detail-task-title {
+  text-decoration: line-through;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.detail-task-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+}
+.detail-task-note {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(242, 245, 250, 0.78);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 6px;
+  padding: 4px 7px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.detail-task-note a,
+.detail-task-title a {
+  color: var(--theme);
+  text-decoration: underline;
+  word-break: break-all;
+  cursor: pointer;
+}
+
 /* 主区 */
 #main {
   flex: 1;
@@ -122,7 +359,7 @@ body.click-through #titlebar {
   align-items: center;
   gap: 10px;
   padding: 8px 12px 10px;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--hairline);
 }
 .view-switch {
   display: flex;
@@ -206,6 +443,35 @@ body.click-through #titlebar {
 .task-item:hover {
   background: rgba(0, 0, 0, 0.34);
 }
+.task-item.dragging {
+  opacity: 0.4;
+}
+/* 拖拽浮层：显示任务标题，跟随鼠标 */
+.drag-overlay {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+  max-width: 220px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(20, 24, 34, 0.95);
+  border: 1px solid var(--theme);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transform: translate(12px, 12px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.drop-target {
+  outline: 2px dashed var(--theme);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.22) !important;
+  border-color: transparent;
+}
 .task-item.done .task-title {
   text-decoration: line-through;
   color: var(--text-dim);
@@ -283,8 +549,8 @@ body.click-through #titlebar {
 .month-cell {
   min-height: 78px;
   border-radius: 9px;
-  background: rgba(64, 82, 126, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hairline-soft);
   padding: 5px 6px;
   font-size: 13px;
   cursor: pointer;
@@ -301,8 +567,18 @@ body.click-through #titlebar {
 }
 .month-cell.today {
   outline: 2px solid var(--theme);
-  background: rgba(var(--theme-rgb, 79, 140, 255), 0.32);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.22);
   border-color: transparent;
+}
+/* 今日日期徽章（对标参考 HTML 的「今 N」） */
+.month-cell.today .dnum {
+  background: var(--theme);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 0 6px;
+  display: inline-block;
+  text-shadow: none;
 }
 .month-cell .dnum {
   color: #fff;
@@ -331,6 +607,20 @@ body.click-through #titlebar {
   align-items: center;
   gap: 4px;
   margin-top: 2px;
+  cursor: grab;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+.month-task-mini:active {
+  cursor: grabbing;
+}
+.month-task-mini.dragging {
+  opacity: 0.4;
+}
+.month-cell.drop-target {
+  outline: 2px dashed var(--theme);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.22);
+  border-color: transparent;
 }
 .month-mini-text {
   font-size: 11px;
@@ -353,7 +643,7 @@ body.click-through #titlebar {
 }
 .week-col {
   background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hairline-soft);
   border-radius: 9px;
   padding: 6px;
   min-height: 300px;
@@ -375,7 +665,7 @@ body.click-through #titlebar {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   margin-bottom: 6px;
   padding-bottom: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--hairline);
 }
 
 /* 日视图时间轴 */
@@ -386,7 +676,7 @@ body.click-through #titlebar {
   display: flex;
   gap: 8px;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--hairline);
 }
 .day-hour .hh {
   width: 46px;
@@ -562,6 +852,85 @@ body.click-through #titlebar {
   gap: 7px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.9);
+}
+/* 文档待办区 */
+.ai-doc-box {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.ai-doc-box.hidden {
+  display: none;
+}
+.ai-doc-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.ai-doc-box input[type='file'] {
+  width: 100%;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.ai-doc-listing {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 6px 0;
+}
+.ai-doc-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+}
+.ai-doc-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-doc-date {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--theme);
+  background: rgba(var(--theme-rgb, 79, 140, 255), 0.16);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.ai-doc-date-today {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.1);
+}
+.ai-doc-week {
+  color: #ffd479;
+  background: rgba(255, 196, 0, 0.16);
+}
+.ai-doc-base {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.ai-doc-base input[type='date'] {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.ai-doc-base-today {
+  padding: 2px 8px;
+  font-size: 12px;
 }
 
 /* Toast */

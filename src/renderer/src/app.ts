@@ -56,6 +56,12 @@ function applySettingsToDom(s: AppSettings): void {
   const app = $('#app')!
   ;(app as HTMLElement).style.background = '' // 固定深色毛玻璃，透明度统一由窗口 setOpacity 控制
   document.body.classList.toggle('click-through', !!s.clickThrough)
+  // 详情面板宽度（持久化），约束 200~480，缺省 280
+  const detail = $('#detail') as HTMLElement | null
+  if (detail) {
+    const w = typeof s.panelWidth === 'number' ? Math.max(200, Math.min(480, s.panelWidth)) : 280
+    detail.style.width = w + 'px'
+  }
 }
 
 /** 事件绑定 */
@@ -93,6 +99,35 @@ function bindEvents(): void {
     if (e.key === 'Escape') {
       ;['task-modal', 'settings-modal', 'ai-panel'].forEach((id) => closeModal($('#' + id)!))
     }
+  })
+
+  // 详情面板拖拽调宽（松手后持久化宽度到设置）
+  const resizer = $('#detail-resizer')!
+  let saveTimer: number | undefined
+  resizer.addEventListener('mousedown', (e: MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const detail = $('#detail') as HTMLElement
+    const startW = detail.getBoundingClientRect().width
+    resizer.classList.add('active')
+    const onMove = (ev: MouseEvent) => {
+      let w = startW - (ev.clientX - startX)
+      w = Math.max(200, Math.min(480, w))
+      detail.style.width = w + 'px'
+    }
+    const onUp = () => {
+      resizer.classList.remove('active')
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      // 防抖写回持久化，避免高频 IPC
+      if (saveTimer) clearTimeout(saveTimer)
+      saveTimer = window.setTimeout(() => {
+        const w = Math.round(detail.getBoundingClientRect().width)
+        df.updateSettings({ panelWidth: Math.max(200, Math.min(480, w)) })
+      }, 250)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
   })
 
   // 暴露给子模块用于重渲染

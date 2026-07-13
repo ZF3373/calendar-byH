@@ -37,7 +37,27 @@ export function parseDate(s?: string): Date | null {
   return new Date(Number(y), Number(mo) - 1, Number(d), h ? Number(h) : 0, mi ? Number(mi) : 0)
 }
 
+// 把文本中的 URL 渲染为可点击链接（安全：文本用 textContent，仅 URL 段建 <a>，防 XSS）
+const URL_RE = /(https?:\/\/[^\s<>"'）)）]+)/gi
 export const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
+export function linkify(text: string): Node[] {
+  const nodes: Node[] = []
+  let last = 0
+  for (const m of text.matchAll(URL_RE)) {
+    const start = m.index ?? 0
+    if (start > last) nodes.push(document.createTextNode(text.slice(last, start)))
+    const a = document.createElement('a')
+    a.href = m[0]
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    a.textContent = m[0]
+    nodes.push(a)
+    last = start + m[0].length
+  }
+  if (last < text.length) nodes.push(document.createTextNode(text.slice(last)))
+  return nodes
+}
+
 
 export function startOfWeek(d: Date): Date {
   const x = new Date(d)
@@ -83,7 +103,8 @@ export const state = {
   ai: {} as AISettings,
   view: 'month' as 'day' | 'week' | 'month',
   activeList: '' as string, // '' = 全部
-  cursorDate: new Date()
+  cursorDate: new Date(),
+  selectedDate: new Date() // 月视图选中日（驱动右侧详情面板）
 }
 
 // 暴露到 window，供子模块（views/components）共享同一状态实例

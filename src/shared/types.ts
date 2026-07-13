@@ -48,10 +48,11 @@ export interface Task {
 /** AI 模型配置 */
 export interface AISettings {
   enabled: boolean
-  provider: 'deepseek'
+  // 服务商预设（均为 OpenAI 兼容格式，区别在默认 baseUrl / 模型列表）
+  provider: 'openai' | 'deepseek' | 'qwen' | 'kimi' | 'ollama' | 'custom'
   apiKey: string
   baseUrl: string
-  model: string // deepseek-chat / deepseek-reasoner 等
+  model: string // 各服务商对应的模型名
 }
 
 /** 外观与行为设置 */
@@ -68,6 +69,7 @@ export interface AppSettings {
   alwaysBottom: boolean // 置底
   sound: 'mute' | 'beep' | 'custom'
   customSoundPath?: string
+  panelWidth?: number // 详情面板宽度(px)，缺省回退 280
 }
 
 /** 持久化数据根结构 */

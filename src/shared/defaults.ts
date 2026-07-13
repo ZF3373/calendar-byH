@@ -12,7 +12,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   energySave: false,
   clickThrough: true,
   alwaysBottom: true,
-  sound: 'beep'
+  sound: 'beep',
+  panelWidth: 280
 }
 
 export const DEFAULT_AI: AISettings = {

@@ -108,6 +108,15 @@ class Store {
     await this.write()
   }
 
+  /** 按 note 标记批量删除（用于清空某次文档/AI 导入产生的任务，不动手动任务） */
+  async deleteTasksByNote(note: string): Promise<number> {
+    const d = await this.read()
+    const before = d.tasks.length
+    d.tasks = d.tasks.filter((x) => x.note !== note)
+    await this.write()
+    return before - d.tasks.length
+  }
+
   async reorderTasks(listId: string, orderedIds: string[]): Promise<void> {
     const d = await this.read()
     orderedIds.forEach((tid, idx) => {

@@ -53,6 +53,7 @@ function registerIpc(scheduler: ReminderScheduler): void {
   ipcMain.handle('task:add', async (_e, payload) => store.addTask(payload))
   ipcMain.handle('task:update', async (_e, id: string, patch) => store.updateTask(id, patch))
   ipcMain.handle('task:delete', async (_e, id: string) => store.deleteTask(id))
+  ipcMain.handle('task:deleteByNote', async (_e, note: string) => store.deleteTasksByNote(note))
   ipcMain.handle('task:reorder', async (_e, listId: string, ids: string[]) => store.reorderTasks(listId, ids))
 
   // ---- Settings ----

@@ -3,6 +3,40 @@ import { $, el, toast, parseDate, pad, dateKey, repeatLabel, todayKey } from '..
 
 const df = (window as any).df
 
+/** AI 服务商预设（均为 OpenAI 兼容格式，差异仅在默认 baseUrl 与模型候选） */
+const AI_PRESETS: Record<string, { label: string; baseUrl: string; models: string[] }> = {
+  deepseek: {
+    label: 'DeepSeek',
+    baseUrl: 'https://api.deepseek.com/v1',
+    models: ['deepseek-chat', 'deepseek-reasoner']
+  },
+  openai: {
+    label: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o3-mini']
+  },
+  qwen: {
+    label: '通义千问 (Qwen)',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: ['qwen-plus', 'qwen-max', 'qwen-turbo', 'qwen-long']
+  },
+  kimi: {
+    label: 'Kimi (Moonshot)',
+    baseUrl: 'https://api.moonshot.cn/v1',
+    models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k']
+  },
+  ollama: {
+    label: 'Ollama (本地)',
+    baseUrl: 'http://localhost:11434/v1',
+    models: ['llama3', 'qwen2.5', 'deepseek-r1']
+  },
+  custom: {
+    label: '自定义 / 其他 OpenAI 兼容',
+    baseUrl: '',
+    models: []
+  }
+}
+
 /** 渲染单个任务项（可勾选/拖拽/删除/点击编辑） */
 export function renderTaskItem(t: Task, continues = false): HTMLElement {
   const lists = (window as any).__state.lists
@@ -232,9 +266,82 @@ export function openSettings(): void {
 
   const aiEnabled = field('启用 AI', () => select([{ value: 'true', label: '开', selected: !!ai.enabled }, { value: 'false', label: '关', selected: !ai.enabled }]))
   ;(aiEnabled.querySelector('select') as HTMLSelectElement).id = 'a-enabled'
-  const aiKey = field('DeepSeek API Key', () => input({ id: 'a-key', placeholder: 'sk-...' }, ai.apiKey || ''))
-  const aiModel = field('模型', () => select([{ value: 'deepseek-chat', label: 'deepseek-chat', selected: ai.model === 'deepseek-chat' }, { value: 'deepseek-reasoner', label: 'deepseek-reasoner', selected: ai.model === 'deepseek-reasoner' }]))
-  ;(aiModel.querySelector('select') as HTMLSelectElement).id = 'a-model'
+  // 服务商 / 格式预设
+  const curProvider = AI_PRESETS[ai.provider] ? ai.provider : 'deepseek'
+  const aiProvider = field('服务商 / 格式', () =>
+    select(
+      Object.entries(AI_PRESETS).map(([v, p]) => ({
+        value: v,
+        label: p.label,
+        selected: v === curProvider
+      }))
+    )
+  )
+  ;(aiProvider.querySelector('select') as HTMLSelectElement).id = 'a-provider'
+  const aiKey = field('API Key', () => input({ id: 'a-key', placeholder: 'sk-...（本地 Ollama 可留空）' }, ai.apiKey || ''))
+  // Base URL（按预设预填，可改；custom 留空让用户填）
+  const aiBase = field('Base URL', () =>
+    input({ id: 'a-base', placeholder: AI_PRESETS[curProvider].baseUrl || 'https://your-endpoint/v1' }, ai.baseUrl || AI_PRESETS[curProvider].baseUrl || '')
+  )
+  // 模型：预设服务商给下拉候选；custom 或用户手动指定时用文本输入
+  const presetModels = AI_PRESETS[curProvider].models
+  const useSelect = presetModels.length > 0 && presetModels.includes(ai.model)
+  const aiModelSel = field('模型', () =>
+    select(
+      presetModels.map((m) => ({ value: m, label: m, selected: m === ai.model }))
+    )
+  )
+  ;(aiModelSel.querySelector('select') as HTMLSelectElement).id = 'a-model-sel'
+  const aiModelTxt = field('模型（手动填写）', () => input({ id: 'a-model-txt', placeholder: '模型名，如 deepseek-chat' }, useSelect ? '' : ai.model || ''))
+  ;(aiModelTxt.querySelector('input') as HTMLInputElement).style.display = useSelect ? 'none' : ''
+
+  // 切换服务商：联动预填 Base URL、刷新模型候选、切换模型输入方式
+  // 注意：此时元素尚未挂载到 DOM，必须用 wrapper.querySelector 而非全局 $('#...')
+  const providerSel = aiProvider.querySelector('select') as HTMLSelectElement
+  providerSel.onchange = () => {
+    const p = providerSel.value
+    const preset = AI_PRESETS[p]
+    ;(aiBase.querySelector('input') as HTMLInputElement).value = preset.baseUrl || ''
+    // 重建模型下拉
+    const sel = aiModelSel.querySelector('select') as HTMLSelectElement
+    sel.innerHTML = ''
+    preset.models.forEach((m) => {
+      const o = document.createElement('option')
+      o.value = m
+      o.textContent = m
+      sel.append(o)
+    })
+    const useSelNow = preset.models.length > 0
+    ;(sel as unknown as HTMLElement).style.display = useSelNow ? '' : 'none'
+    ;(aiModelTxt.querySelector('input') as HTMLElement).style.display = useSelNow ? 'none' : ''
+  }
+
+  // 测试连接：用当前表单值先写入再发起一次探针请求
+  const testAi = el('button', { class: 'btn-ghost', text: '测试连接' })
+  testAi.onclick = async () => {
+    const provider = ($('#a-provider') as HTMLSelectElement).value as any
+    const baseUrl = ($('#a-base') as HTMLInputElement).value.trim()
+    const apiKey = ($('#a-key') as HTMLInputElement).value.trim()
+    const model =
+      ($('#a-model-sel') as HTMLSelectElement).style.display !== 'none'
+        ? ($('#a-model-sel') as HTMLSelectElement).value
+        : ($('#a-model-txt') as HTMLInputElement).value.trim()
+    testAi.setAttribute('disabled', 'true')
+    const oldText = testAi.textContent
+    testAi.textContent = '测试中…'
+    try {
+      // 先按当前表单值保存（保留原有 enabled 开关，不强制开启），确保 aiChat 用最新配置
+      const savedEnabled = (window as any).__state.ai?.enabled ?? true
+      await df.updateAI({ enabled: savedEnabled, provider, apiKey, baseUrl, model })
+      await df.aiChat([{ role: 'user', content: '你好，请只回复两个字：ok' }], {})
+      toast('连接成功 ✓')
+    } catch (err: any) {
+      toast('连接失败：' + (err?.message || String(err)))
+    } finally {
+      testAi.removeAttribute('disabled')
+      testAi.textContent = oldText
+    }
+  }
 
   const save = el('button', { class: 'btn-primary', text: '保存设置' })
   save.onclick = async () => {
@@ -249,9 +356,15 @@ export function openSettings(): void {
       autoStart: ($('#s-auto') as HTMLSelectElement).value === 'true'
     })
     await df.updateAI({
-      enabled: ($('#a-enabled') as HTMLSelectElement).value === 'true',
+      enabled: ($('#a-enabled') as HTMLSelectElement).value === 'true' || (($('#a-key') as HTMLInputElement).value.trim() !== ''),
+      provider: ($('#a-provider') as HTMLSelectElement).value as any,
       apiKey: ($('#a-key') as HTMLInputElement).value.trim(),
-      model: ($('#a-model') as HTMLSelectElement).value
+      baseUrl: ($('#a-base') as HTMLInputElement).value.trim(),
+      // 下拉可见用下拉值，否则取手动输入
+      model:
+        ($('#a-model-sel') as HTMLSelectElement).style.display !== 'none'
+          ? ($('#a-model-sel') as HTMLSelectElement).value
+          : ($('#a-model-txt') as HTMLInputElement).value.trim()
     })
     closeModal(modal)
     ;(window as any).__render()
@@ -260,7 +373,11 @@ export function openSettings(): void {
   const cancel = el('button', { class: 'btn-ghost', text: '取消' })
   cancel.onclick = () => closeModal(modal)
 
-  card.append(opacity, themeField, fontField, lhField, bottom, click, energy, autostart, el('h3', { text: 'AI 配置' }), aiEnabled, aiKey, aiModel, save, cancel)
+  card.append(
+    opacity, themeField, fontField, lhField, bottom, click, energy, autostart,
+    el('h3', { text: 'AI 配置' }),
+    aiEnabled, aiProvider, aiKey, aiBase, aiModelSel, aiModelTxt, testAi, save, cancel
+  )
   modal.append(card)
   modal.classList.remove('hidden')
 }

@@ -13,6 +13,7 @@ const api = {
     ipcRenderer.invoke('task:add', payload),
   updateTask: (id: string, patch: Partial<Task>) => ipcRenderer.invoke('task:update', id, patch),
   deleteTask: (id: string) => ipcRenderer.invoke('task:delete', id),
+  deleteTasksByNote: (note: string) => ipcRenderer.invoke('task:deleteByNote', note),
   reorderTasks: (listId: string, ids: string[]) => ipcRenderer.invoke('task:reorder', listId, ids),
   updateSettings: (patch: Partial<AppSettings>) => ipcRenderer.invoke('settings:update', patch),
   updateAI: (patch: Partial<AISettings>) => ipcRenderer.invoke('ai:update', patch),

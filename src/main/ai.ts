@@ -31,7 +31,7 @@ export class AIClient {
   }
 
   private cacheKey(cfg: AISettings, messages: { role: string; content: string }[]): string {
-    return cfg.model + '|' + JSON.stringify(messages)
+    return `${cfg.provider}|${cfg.model}|${cfg.baseUrl}|` + JSON.stringify(messages)
   }
 
   private saveCache(): void {
@@ -71,7 +71,8 @@ export class AIClient {
           model: cfg.model,
           messages,
           temperature: 0.7,
-          stream: false
+          stream: false,
+          max_tokens: 4096
         }),
         signal: ctrl.signal
       })
